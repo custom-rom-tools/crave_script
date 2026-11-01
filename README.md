@@ -3,8 +3,8 @@
 Collection of automated Crave.io build scripts for compiling custom ROMs and recoveries for Realme Atoll devices (Realme 6 Pro, 7 Pro, and 8 Pro).
 
 Every script includes built-in post-build automation:
-- **Instant Direct Download Link**: Automatically uploads output artifacts for direct download links (`temp.sh` with automatic `gofile.io` fallback) and prints direct HTTPS download links in the build console.
-- **SourceForge Direct Upload (Optional)**: Automatically uploads build artifacts directly to SourceForge via `rsync` over SSH using devspace SSH key (`export SF_UPLOAD=true`) or Base64 key (`export SF_KEY='...'`).
+- **SourceForge Direct Upload**: Uploads build artifacts directly to SourceForge via `rsync` over SSH using devspace SSH key (`export SF_UPLOAD=true`) or Base64 key (`export SF_KEY='...'`).
+- **Direct Download Link (temp.sh Fallback)**: When SourceForge upload is skipped or fails, artifacts are automatically uploaded to `temp.sh` for instant direct download links printed in the build console.
 - **Stock Workspace Integration**: All scripts run within Crave's stock cached workspace (`/tmp/src/android`), fully utilizing Crave's fast resync and prebuilt dependencies without redundant downloads.
 - **Centralized Configuration**: Every script has a dedicated top-level `CONFIGURATION` block for URLs, branches, lunch targets, and upload paths. The script body is 100% parameter-driven.
 
@@ -42,7 +42,7 @@ Then pass `export SF_KEY='...'`:
 crave run --no-patch -- "export SF_KEY='<base64_encoded_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/<script>.sh | bash"
 ```
 
-> **Note:** If neither `SF_UPLOAD=true` nor `SF_KEY` is provided, the script skips SourceForge upload and prints direct download links (`temp.sh` / `gofile.io`).
+> **Note:** If neither `SF_UPLOAD=true` nor `SF_KEY` is provided, or if SourceForge upload fails, the script automatically falls back to `temp.sh` for direct download links.
 
 ---
 
@@ -168,6 +168,6 @@ crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubuser
 
 ## 4. Maintenance & Modular Cloud Helpers
 
-- `upload.py`: Modular Python artifact uploader supporting SourceForge direct upload and instant direct web links (`temp.sh` with automatic `gofile.io` fallback). Auto-detects and uploads artifacts (`.zip`, `.img`) and build-generated companion files (MD5 `.md5sum`/`.md5`, SHA256 `.sha256sum`/`.sha256`, `.json` OTA metadata, and changelog `.txt` files), skipping any that were not generated.
+- `upload.py`: Modular Python artifact uploader supporting SourceForge direct upload with automatic `temp.sh` fallback when SourceForge upload is skipped or fails. Auto-detects and uploads artifacts (`.zip`, `.img`) and build-generated companion files (MD5 `.md5sum`/`.md5`, SHA256 `.sha256sum`/`.sha256`, `.json` OTA metadata, and changelog `.txt` files), skipping any that were not generated.
 - `clean.py`: Resets modified repositories and removes dirty build patches before repo sync.
 - `patch.py`: Applies upstream bugfixes and local manifest patches after repo sync.

@@ -18,13 +18,17 @@
 # CONFIGURATION
 # =============================================================================
 
-DEVICE="sm7125"
+DEVICE="${1:-${DEVICE:-sm7125}}"
+BUILD_TARGET="recoveryimage"
 BUILD_VARIANT="${BUILD_VARIANT:-eng}"
 LUNCH_TARGET="twrp_${DEVICE}-${BUILD_VARIANT}"
 
-# Base Minimal TWRP Manifest for Android 12.1 (shared base for TWRP 12.1 & OrangeFox 12.1)
-BASE_MANIFEST_URL="https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git"
-BASE_MANIFEST_BRANCH="twrp-12.1"
+# Base Manifests
+OFRP_BASE_MANIFEST_URL="https://gitlab.com/OrangeFox/Manifest.git"
+OFRP_BASE_MANIFEST_BRANCH="fox_12.1"
+
+TWRP_BASE_MANIFEST_URL="https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git"
+TWRP_BASE_MANIFEST_BRANCH="twrp-12.1"
 
 # Shared Recovery Manifest (local_manifests containing device trees)
 RECOVERY_MANIFEST_URL="https://github.com/realme-atoll/recovery-manifest"
@@ -82,18 +86,20 @@ build_orangefox() {
     cd "$WORK_DIR"
 
     # Clean intermediate files to conserve disk space
-    rm -rf out/target/product/"${DEVICE}" out/soong
-    rm -rf .repo/local_manifests device/realme/"${DEVICE}"
+    rm -rf out/target/product/* out/soong
+    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}"
 
-    # Initialize standard minimal manifest
+    # 1. Initialize official OrangeFox manifest
+    echo ""
     echo "=============================="
-    echo " [OrangeFox] Initializing minimal manifest ($BASE_MANIFEST_BRANCH)..."
+    echo " [1/6] [OrangeFox] Initializing OrangeFox manifest ($OFRP_BASE_MANIFEST_BRANCH)..."
     echo "=============================="
-    repo init -u "$BASE_MANIFEST_URL" -b "$BASE_MANIFEST_BRANCH"
+    repo init -u "$OFRP_BASE_MANIFEST_URL" -b "$OFRP_BASE_MANIFEST_BRANCH"
 
-    # Setup device manifest for OrangeFox
+    # 2. Setup device manifest for OrangeFox
+    echo ""
     echo "=============================="
-    echo " [OrangeFox] Setting up device manifest (branch: $OFRP_DEVICE_BRANCH)..."
+    echo " [2/6] [OrangeFox] Setting up device manifest (branch: $OFRP_DEVICE_BRANCH)..."
     echo "=============================="
     if ! git clone -b "$OFRP_DEVICE_BRANCH" "$RECOVERY_MANIFEST_URL" .repo/local_manifests; then
         echo ">>> [FAILED] OrangeFox local manifest clone failed!"
@@ -101,45 +107,66 @@ build_orangefox() {
         return 1
     fi
 
-    # Sync source
+    # 3. Sync source
+    echo ""
     echo "=============================="
-    echo " [OrangeFox] Syncing source via crave resync..."
+    echo " [3/6] [OrangeFox] Syncing source via crave resync..."
     echo "=============================="
     /opt/crave/resync.sh
-
-    # Official OrangeFox source setup (fox_12.1)
-    echo "=============================="
-    echo " [OrangeFox] Fetching OrangeFox Recovery GUI & Vendor trees..."
-    echo "=============================="
-    rm -rf bootable/recovery vendor/recovery
-    git clone https://gitlab.com/OrangeFox/bootable/Recovery.git -b fox_12.1 bootable/recovery
-    git clone https://gitlab.com/OrangeFox/vendor/recovery.git -b main vendor/recovery
 
     # Qualcomm dependencies
     ensure_qcom_dependencies
 
-    # Setup environment & lunch
+    # 4. Setup environment & lunch
+    echo ""
     echo "=============================="
-    echo " [OrangeFox] Setting up environment & lunching $LUNCH_TARGET..."
+    echo " [4/6] [OrangeFox] Setting up environment & lunching $LUNCH_TARGET..."
     echo "=============================="
     export ALLOW_MISSING_DEPENDENCIES=true
     export FOX_USE_TWRP_RECOVERY_IMAGE_BUILDER=1
     export LC_ALL="C.UTF-8"
 
     source build/envsetup.sh
-    [ -f "device/realme/${DEVICE}/vendorsetup.sh" ] && source "device/realme/${DEVICE}/vendorsetup.sh" "${DEVICE}"
+    if [ -f "device/realme/${DEVICE}/vendorsetup.sh" ]; then
+        source "device/realme/${DEVICE}/vendorsetup.sh"
+    elif [ -f "device/realme/sm7125/vendorsetup.sh" ]; then
+        source "device/realme/sm7125/vendorsetup.sh"
+    fi
 
     if lunch "$LUNCH_TARGET"; then
+        # 5. Compile recovery
+        echo ""
         echo "=============================="
-        echo " [OrangeFox] Compiling recovery image..."
+        echo " [5/6] [OrangeFox] Compiling recovery image ($BUILD_TARGET)..."
         echo "=============================="
-        if m recoveryimage; then
+        if m "$BUILD_TARGET"; then
             echo ">>> [SUCCESS] OrangeFox Recovery build succeeded!"
             SUCCESS_BUILDS+=("OrangeFox")
 
-            # Prepare branded artifacts and upload
+            # 6. Upload official artifacts (check for existing branded names first)
+            echo ""
+            echo "=============================="
+            echo " [6/6] [OrangeFox] Uploading recovery artifacts..."
+            echo "=============================="
             local out_dir="${WORK_DIR}/out/target/product/${DEVICE}"
-            [ -f "$out_dir/recovery.img" ] && cp -v "$out_dir/recovery.img" "$out_dir/OrangeFox-R12.0-realme-${DEVICE}.img"
+            local BUILD_DATE=$(date +%Y%m%d)
+
+            # Only rename generic recovery.img if build didn't already produce a branded image
+            if [ -f "$out_dir/recovery.img" ]; then
+                local existing_img=$(find "$out_dir" -maxdepth 1 -name "OrangeFox*.img" | head -n 1)
+                if [ -z "$existing_img" ]; then
+                    mv -v "$out_dir/recovery.img" "$out_dir/OrangeFox-R12.0-${BUILD_DATE}-Unofficial-${DEVICE}.img"
+                fi
+            fi
+
+            # Only rename generic recovery.zip if build didn't already produce an OrangeFox zip
+            if [ -f "$out_dir/recovery.zip" ]; then
+                local existing_zip=$(find "$out_dir" -maxdepth 1 -name "OrangeFox*.zip" | head -n 1)
+                if [ -z "$existing_zip" ]; then
+                    mv -v "$out_dir/recovery.zip" "$out_dir/OrangeFox-R12.0-${BUILD_DATE}-Unofficial-${DEVICE}.zip"
+                fi
+            fi
+
             local UPLOAD_SUBDIR="${UPLOAD_SUBDIR_BASE}/OrangeFox"
             curl -sLf "$UPLOAD_SCRIPT_URL" | python3 - "${UPLOAD_SUBDIR}" "${DEVICE}" "recovery"
         else
@@ -162,19 +189,21 @@ build_twrp() {
     echo "============================================================"
     cd "$WORK_DIR"
 
-    # Clean intermediate files to conserve disk space
-    rm -rf out/target/product/"${DEVICE}" out/soong
-    rm -rf .repo/local_manifests device/realme/"${DEVICE}"
+    # Clean intermediate files
+    rm -rf out/target/product/* out/soong
+    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}"
 
-    # Initialize standard TWRP minimal manifest
+    # 1. Initialize TWRP minimal manifest
+    echo ""
     echo "=============================="
-    echo " [TWRP] Initializing minimal manifest ($BASE_MANIFEST_BRANCH)..."
+    echo " [1/6] [TWRP] Initializing TWRP base repo ($TWRP_BASE_MANIFEST_BRANCH)..."
     echo "=============================="
-    repo init -u "$BASE_MANIFEST_URL" -b "$BASE_MANIFEST_BRANCH"
+    repo init -u "$TWRP_BASE_MANIFEST_URL" -b "$TWRP_BASE_MANIFEST_BRANCH"
 
-    # Setup device manifest for TWRP
+    # 2. Setup device manifest for TWRP
+    echo ""
     echo "=============================="
-    echo " [TWRP] Setting up device manifest (branch: $TWRP_DEVICE_BRANCH)..."
+    echo " [2/6] [TWRP] Setting up device manifest (branch: $TWRP_DEVICE_BRANCH)..."
     echo "=============================="
     if ! git clone -b "$TWRP_DEVICE_BRANCH" "$RECOVERY_MANIFEST_URL" .repo/local_manifests; then
         echo ">>> [FAILED] TWRP local manifest clone failed!"
@@ -182,40 +211,66 @@ build_twrp() {
         return 1
     fi
 
-    # Reset recovery sources to standard TWRP
-    rm -rf bootable/recovery vendor/recovery
-
-    # Sync source
+    # 3. Sync source
+    echo ""
     echo "=============================="
-    echo " [TWRP] Syncing source via crave resync..."
+    echo " [3/6] [TWRP] Syncing source via crave resync..."
     echo "=============================="
     /opt/crave/resync.sh
 
     # Qualcomm dependencies
     ensure_qcom_dependencies
 
-    # Setup environment & lunch
+    # 4. Setup environment & lunch
+    echo ""
     echo "=============================="
-    echo " [TWRP] Setting up environment & lunching $LUNCH_TARGET..."
+    echo " [4/6] [TWRP] Setting up environment & lunching $LUNCH_TARGET..."
     echo "=============================="
     export ALLOW_MISSING_DEPENDENCIES=true
     export TW_DEVICE_VERSION="12.1"
     export LC_ALL="C.UTF-8"
 
     source build/envsetup.sh
-    [ -f "device/realme/${DEVICE}/vendorsetup.sh" ] && source "device/realme/${DEVICE}/vendorsetup.sh" "${DEVICE}"
+    if [ -f "device/realme/${DEVICE}/vendorsetup.sh" ]; then
+        source "device/realme/${DEVICE}/vendorsetup.sh"
+    elif [ -f "device/realme/sm7125/vendorsetup.sh" ]; then
+        source "device/realme/sm7125/vendorsetup.sh"
+    fi
 
     if lunch "$LUNCH_TARGET"; then
+        # 5. Compile recovery
+        echo ""
         echo "=============================="
-        echo " [TWRP] Compiling recovery image..."
+        echo " [5/6] [TWRP] Compiling recovery image ($BUILD_TARGET)..."
         echo "=============================="
-        if m recoveryimage; then
+        if m "$BUILD_TARGET"; then
             echo ">>> [SUCCESS] TWRP Recovery build succeeded!"
             SUCCESS_BUILDS+=("TWRP")
 
-            # Prepare branded artifacts and upload
+            # 6. Upload official artifacts (check for existing branded names first)
+            echo ""
+            echo "=============================="
+            echo " [6/6] [TWRP] Uploading recovery artifacts..."
+            echo "=============================="
             local out_dir="${WORK_DIR}/out/target/product/${DEVICE}"
-            [ -f "$out_dir/recovery.img" ] && cp -v "$out_dir/recovery.img" "$out_dir/TWRP-realme-${DEVICE}.img"
+            local BUILD_DATE=$(date +%Y%m%d)
+
+            # Only rename generic recovery.img if build didn't already produce a branded image
+            if [ -f "$out_dir/recovery.img" ]; then
+                local existing_img=$(find "$out_dir" -maxdepth 1 -name "TWRP*.img" | head -n 1)
+                if [ -z "$existing_img" ]; then
+                    mv -v "$out_dir/recovery.img" "$out_dir/TWRP-12.1-${BUILD_DATE}-Unofficial-${DEVICE}.img"
+                fi
+            fi
+
+            # Only rename generic recovery.zip if build didn't already produce a TWRP zip
+            if [ -f "$out_dir/recovery.zip" ]; then
+                local existing_zip=$(find "$out_dir" -maxdepth 1 -name "TWRP*.zip" | head -n 1)
+                if [ -z "$existing_zip" ]; then
+                    mv -v "$out_dir/recovery.zip" "$out_dir/TWRP-12.1-${BUILD_DATE}-Unofficial-${DEVICE}.zip"
+                fi
+            fi
+
             local UPLOAD_SUBDIR="${UPLOAD_SUBDIR_BASE}/TWRP"
             curl -sLf "$UPLOAD_SCRIPT_URL" | python3 - "${UPLOAD_SUBDIR}" "${DEVICE}" "recovery"
         else

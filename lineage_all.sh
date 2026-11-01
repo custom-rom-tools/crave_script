@@ -66,10 +66,10 @@ echo " Starting $ROM_NAME Batch Build ($BUILD_VARIANT)"
 echo " Workspace: $WORK_DIR"
 echo "============================================================"
 
-# Initialize ROM repo (shared base)
+# 1. Initialize ROM repo (shared base)
 echo ""
 echo "=============================="
-echo " Initializing $ROM_NAME base repo..."
+echo " [1/6] Initializing $ROM_NAME ($ROM_MANIFEST_BRANCH)..."
 echo "=============================="
 repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --git-lfs
 
@@ -87,45 +87,45 @@ build_device() {
 
     cd "$WORK_DIR"
     
-    # 1. Setup device manifest
+    # 2. Setup device manifest
     echo ""
     echo "=============================="
-    echo " [$DEVICE] Setting up device manifest..."
+    echo " [2/6] [$DEVICE] Setting up device manifest..."
     echo "=============================="
     rm -rf .repo/local_manifests
     if git clone -b "$manifest_branch" "$manifest_url" .repo/local_manifests; then
         
-        # 2. Clean and sync source
+        # 3. Clean and sync source
         echo ""
         echo "=============================="
-        echo " [$DEVICE] Syncing source and applying patches..."
+        echo " [3/6] [$DEVICE] Syncing source and applying patches..."
         echo "=============================="
         curl -sLf "$CLEAN_SCRIPT_URL" | python3
         /opt/crave/resync.sh
         curl -sLf "$PATCH_SCRIPT_URL" | python3
 
-        # 3. Setup build environment and lunch
+        # 4. Setup build environment and lunch
         echo ""
         echo "=============================="
-        echo " [$DEVICE] Setting up environment & lunching..."
+        echo " [4/6] [$DEVICE] Setting up environment & lunching lineage_${DEVICE}-bp4a-${BUILD_VARIANT}..."
         echo "=============================="
 
         source build/envsetup.sh
 
         if lunch "lineage_${DEVICE}-bp4a-${BUILD_VARIANT}"; then
-            # 4. Compile ROM
+            # 5. Compile ROM
             echo ""
             echo "=============================="
-            echo " [$DEVICE] Building $ROM_NAME ($BUILD_TARGET)..."
+            echo " [5/6] [$DEVICE] Building $ROM_NAME ($BUILD_TARGET)..."
             echo "=============================="
             if m "$BUILD_TARGET"; then
                 echo " [$DEVICE] Build succeeded!"
                 SUCCESS_BUILDS+=("$DEVICE")
 
-                # 5. Upload build artifacts
+                # 6. Upload build artifacts
                 echo ""
                 echo "=============================="
-                echo " [$DEVICE] Uploading build artifacts..."
+                echo " [6/6] [$DEVICE] Uploading build artifacts..."
                 echo "=============================="
                 curl -sLf "$UPLOAD_SCRIPT_URL" | python3 - "${UPLOAD_SUBDIR}" "${DEVICE}" "rom"
             else
