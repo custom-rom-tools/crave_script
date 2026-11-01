@@ -6,7 +6,7 @@
 # Examples:
 #   Standard Build:
 #     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
-#   With SourceForge Upload (Devspace Key /tmp/crave_sf):
+#   With SourceForge Upload (Devspace Key):
 #     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
 #   With SourceForge Upload (Base64 SF_KEY):
 #     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
@@ -63,70 +63,80 @@ fi
 
 echo "============================================================"
 echo " Starting $ROM_NAME Batch Build ($BUILD_VARIANT)"
+echo " Devices: RMX2170, RMX2061, RMX3081"
 echo " Workspace: $WORK_DIR"
 echo "============================================================"
 
-# 1. Initialize ROM repo (shared base)
+# Step 1/4: Initialize ROM repo (shared base)
 echo ""
-echo "=============================="
-echo " [1/6] Initializing $ROM_NAME ($ROM_MANIFEST_BRANCH)..."
-echo "=============================="
-repo init -u https://github.com/Evolution-X/manifest -b bka --git-lfs
+echo "============================================================"
+echo " [Step 1/4] Initializing ROM Source ($ROM_NAME - $ROM_MANIFEST_BRANCH)..."
+echo "============================================================"
+repo init -u "$ROM_MANIFEST_URL" -b "$ROM_MANIFEST_BRANCH" --git-lfs
 
 # Helper: Build single device
 build_device() {
     local DEVICE="$1"
     local manifest_url="$2"
     local manifest_branch="$3"
+    local DEV_IDX="$4"
+    local TOTAL_DEVS="$5"
+    local OVERALL_STEP="$6"
+    local TOTAL_STEPS=4
     local UPLOAD_SUBDIR="${DEVICE}/${UPLOAD_SUBDIR_SUFFIX}"
 
     echo ""
     echo "============================================================"
-    echo ">>> Starting Build for $DEVICE ($BUILD_VARIANT)..."
+    echo " [Step ${OVERALL_STEP}/${TOTAL_STEPS}] [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Starting Build (${BUILD_VARIANT})..."
     echo "============================================================"
 
     cd "$WORK_DIR"
+
+    # Clean previous device-specific trees to prevent module collisions
+    rm -rf device/realme/RMX* vendor/realme/RMX*
     
-    # 2. Setup device manifest
+    # Substep 1/5: Setup device manifest
     echo ""
-    echo "=============================="
-    echo " [2/6] [$DEVICE] Setting up device manifest..."
-    echo "=============================="
+    echo "------------------------------------------------------------"
+    echo " [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Step 1/5: Setting up device manifest..."
+    echo "------------------------------------------------------------"
     rm -rf .repo/local_manifests
     if git clone -b "$manifest_branch" "$manifest_url" .repo/local_manifests; then
-        
-        # 3. Clean and sync source
+        # Substep 2/5: Clean and sync source
         echo ""
-        echo "=============================="
-        echo " [3/6] [$DEVICE] Syncing source and applying patches..."
-        echo "=============================="
+        echo "------------------------------------------------------------"
+        echo " [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Step 2/5: Syncing source and applying patches..."
+        echo "------------------------------------------------------------"
         curl -sLf "$CLEAN_SCRIPT_URL" | python3
         /opt/crave/resync.sh
         curl -sLf "$PATCH_SCRIPT_URL" | python3
         
-        # 4. Setup build environment and lunch
+        # Substep 3/5: Setup build environment and lunch
         echo ""
-        echo "=============================="
-        echo " [4/6] [$DEVICE] Setting up environment & lunching lineage_${DEVICE}-bp4a-${BUILD_VARIANT}..."
-        echo "=============================="
+        echo "------------------------------------------------------------"
+        echo " [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Step 3/5: Lunching lineage_${DEVICE}-bp4a-${BUILD_VARIANT}..."
+        echo "------------------------------------------------------------"
 
         source build/envsetup.sh
 
         if lunch "lineage_${DEVICE}-bp4a-${BUILD_VARIANT}"; then
-            # 5. Compile ROM
+            # Ensure clean intermediate product state when switching device targets
+            m installclean
+
+            # Substep 4/5: Compile ROM
             echo ""
-            echo "=============================="
-            echo " [5/6] [$DEVICE] Building $ROM_NAME ($BUILD_TARGET)..."
-            echo "=============================="
+            echo "------------------------------------------------------------"
+            echo " [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Step 4/5: Compiling $ROM_NAME ($BUILD_TARGET)..."
+            echo "------------------------------------------------------------"
             if m "$BUILD_TARGET"; then
                 echo ">>> [SUCCESS] $DEVICE build succeeded!"
                 SUCCESS_BUILDS+=("$DEVICE")
 
-                # 6. Upload build artifacts
+                # Substep 5/5: Upload build artifacts
                 echo ""
-                echo "=============================="
-                echo " [6/6] [$DEVICE] Uploading build artifacts..."
-                echo "=============================="
+                echo "------------------------------------------------------------"
+                echo " [Device ${DEV_IDX}/${TOTAL_DEVS}: ${DEVICE}] Step 5/5: Uploading build artifacts..."
+                echo "------------------------------------------------------------"
                 curl -sLf "$UPLOAD_SCRIPT_URL" | python3 - "${UPLOAD_SUBDIR}" "${DEVICE}" "rom"
             else
                 echo ">>> [FAILED] $DEVICE build compilation failed!"
@@ -142,10 +152,10 @@ build_device() {
     fi
 }
 
-# Build all devices sequentially
-build_device "RMX2170" "$RMX2170_MANIFEST_URL" "$RMX2170_MANIFEST_BRANCH"
-build_device "RMX2061" "$RMX2061_MANIFEST_URL" "$RMX2061_MANIFEST_BRANCH"
-build_device "RMX3081" "$RMX3081_MANIFEST_URL" "$RMX3081_MANIFEST_BRANCH"
+# Build all devices sequentially (Overall steps 2/4, 3/4, 4/4)
+build_device "RMX2170" "$RMX2170_MANIFEST_URL" "$RMX2170_MANIFEST_BRANCH" 1 3 2
+build_device "RMX2061" "$RMX2061_MANIFEST_URL" "$RMX2061_MANIFEST_BRANCH" 2 3 3
+build_device "RMX3081" "$RMX3081_MANIFEST_URL" "$RMX3081_MANIFEST_BRANCH" 3 3 4
 
 # Final Summary Report
 echo ""

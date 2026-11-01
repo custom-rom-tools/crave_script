@@ -6,7 +6,7 @@
 # Examples:
 #   Standard Build:
 #     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
-#   With SourceForge Upload (Devspace Key /tmp/crave_sf):
+#   With SourceForge Upload (Devspace Key):
 #     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
 #   With SourceForge Upload (Base64 SF_KEY):
 #     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
