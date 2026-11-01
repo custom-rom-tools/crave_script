@@ -4,7 +4,7 @@ Collection of automated Crave.io build scripts for compiling custom ROMs and rec
 
 Every script includes built-in post-build automation:
 - **SourceForge Direct Upload**: Uploads build artifacts directly to SourceForge via `rsync` over SSH using devspace SSH key (`export SF_UPLOAD=true`) or Base64 key (`export SF_KEY='...'`).
-- **Direct Download Link (temp.sh Fallback)**: When SourceForge upload is skipped or fails, artifacts are automatically uploaded to `temp.sh` for instant direct download links printed in the build console.
+- **Direct Download Link (Gofile Fallback)**: When SourceForge upload is skipped or fails, artifacts are automatically uploaded to `Gofile.io` for high-speed direct download links printed in the build console (with Filebin secondary fallback).
 - **Stock Workspace Integration**: All scripts run within Crave's stock cached workspace (`/tmp/src/android`), fully utilizing Crave's fast resync and prebuilt dependencies without redundant downloads.
 - **Centralized Configuration**: Every script has a dedicated top-level `CONFIGURATION` block for URLs, branches, lunch targets, and upload paths. The script body is 100% parameter-driven.
 
@@ -21,16 +21,16 @@ If you wish to upload compiled builds directly to SourceForge upon completion:
 ### 2. Choose Authentication Method
 
 #### Method A: Devspace SSH Key (Recommended - Safe, zero credentials in logs)
-Push your local SourceForge SSH key (`~/.ssh/crave_sf`) to devspace `/tmp/crave_sf` once:
+Push your local SourceForge SSH key (`~/.ssh/crave_sf`) to devspace persistent storage (`/tmp/crave_sf`) once:
 ```bash
-# Push key to /tmp/crave_sf on devspace (or use Crave Web Control Center / crave_menu.sh):
-crave push -d /tmp/ ~/.ssh/crave_sf
+# Push key to persistent android storage on devspace (or use Crave Web Control Center / crave_menu.sh):
+crave push -d /tmp/src/android/ ~/.ssh/crave_sf
 ```
 Then trigger your build with `export SF_UPLOAD=true`:
 ```bash
 crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/<script>.sh | bash"
 ```
-During build, the upload script checks `/tmp/crave_sf` directly.
+During build, the upload script checks `/tmp/crave_sf` directly. The key remains preserved before, during, and after builds.
 
 #### Method B: Base64 Key via CLI (Legacy / Alternative)
 Encode your private key to Base64:
@@ -42,7 +42,7 @@ Then pass `export SF_KEY='...'`:
 crave run --no-patch -- "export SF_KEY='<base64_encoded_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/<script>.sh | bash"
 ```
 
-> **Note:** If neither `SF_UPLOAD=true` nor `SF_KEY` is provided, or if SourceForge upload fails, the script automatically falls back to `temp.sh` for direct download links.
+> **Note:** If neither `SF_UPLOAD=true` nor `SF_KEY` is provided, or if SourceForge upload fails, the script automatically falls back to `Gofile.io` for high-speed download links.
 
 ---
 
@@ -168,6 +168,6 @@ crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubuser
 
 ## 4. Maintenance & Modular Cloud Helpers
 
-- `upload.py`: Modular Python artifact uploader supporting SourceForge direct upload with automatic `temp.sh` fallback when SourceForge upload is skipped or fails. Auto-detects and uploads artifacts (`.zip`, `.img`) and build-generated companion files (MD5 `.md5sum`/`.md5`, SHA256 `.sha256sum`/`.sha256`, `.json` OTA metadata, and changelog `.txt` files), skipping any that were not generated.
+- `upload.py`: Modular Python artifact uploader supporting SourceForge direct upload with automatic `Gofile.io` fallback when SourceForge upload is skipped or fails. Auto-detects and uploads artifacts (`.zip`, `.img`) and build-generated companion files (MD5 `.md5sum`/`.md5`, SHA256 `.sha256sum`/`.sha256`, `.json` OTA metadata, and changelog `.txt` files), skipping any that were not generated.
 - `clean.py`: Resets modified repositories and removes dirty build patches before repo sync.
 - `patch.py`: Applies upstream bugfixes and local manifest patches after repo sync.

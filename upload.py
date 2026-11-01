@@ -2,7 +2,7 @@
 """
 Crave Artifact Uploader (upload.py)
 Uploads cooked ROM/recovery builds and companions (.md5sum, .sha256sum, .json, .txt)
-to SourceForge, with temp.sh fallback when SourceForge upload is skipped or fails.
+to SourceForge, with Gofile fallback when SourceForge upload is skipped or fails.
 
 Usage:
   upload.py <remote_subdir> <device_or_path> [build_type] [extra_files...]
@@ -11,6 +11,8 @@ Usage:
 import os
 import sys
 import re
+import json
+import time
 import base64
 import subprocess
 from pathlib import Path
@@ -25,7 +27,7 @@ def get_sf_key() -> Path | None:
     """
     Resolve SourceForge SSH private key:
     1. If SF_KEY is provided: decode base64 key and use it (takes precedence).
-    2. Else if SF_UPLOAD is truthy: look for /tmp/crave_sf in devspace.
+    2. Else if SF_UPLOAD is truthy: look for /tmp/src/android/crave_sf in persistent storage.
     3. Otherwise: skip SourceForge upload.
     """
     sf_key_b64 = os.environ.get("SF_KEY", "").strip()
@@ -43,9 +45,9 @@ def get_sf_key() -> Path | None:
             print(f">>> [WARN] Failed to decode base64 SF_KEY: {e}")
             return None
 
-    # 2. User passed SF_UPLOAD=true/1 -> check single folder location: /tmp/crave_sf
+    # 2. User passed SF_UPLOAD=true/1 -> check single persistent location: /tmp/src/android/crave_sf
     if sf_upload in ("1", "true", "yes", "on"):
-        devspace_key = Path("/tmp/crave_sf")
+        devspace_key = Path("/tmp/src/android/crave_sf")
         if devspace_key.is_file() and devspace_key.stat().st_size > 0:
             try:
                 devspace_key.chmod(0o600)
@@ -54,7 +56,7 @@ def get_sf_key() -> Path | None:
             print(f">>> [SF KEY] Using devspace key: {devspace_key}")
             return devspace_key
 
-        print(">>> [WARN] SF_UPLOAD is enabled, but crave_sf key was not found in devspace (/tmp/crave_sf). Skipping SourceForge.")
+        print(">>> [WARN] SF_UPLOAD is enabled, but crave_sf key was not found in devspace (/tmp/src/android/crave_sf). Skipping SourceForge.")
         return None
 
     # Neither provided
@@ -274,36 +276,88 @@ def upload_sf(files: list[Path], remote_subdir: str, key_file: Path | None) -> b
         return False
 
 
-def upload_temp(files: list[Path]):
-    """Uploads artifacts for instant direct download link via temp.sh."""
-    print("\nGenerating direct download links via temp.sh...")
+def get_gofile_server() -> str:
+    """Dynamically fetch best available Gofile server."""
+    try:
+        res = subprocess.run(
+            ["curl", "-s", "https://api.gofile.io/servers"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        data = json.loads(res.stdout)
+        if data.get("status") == "ok":
+            servers = data.get("data", {}).get("servers", [])
+            if servers:
+                return servers[0].get("name", "store3")
+    except Exception:
+        pass
+    return "store3"
+
+
+def upload_fallback(files: list[Path]):
+    """
+    Fallback uploader for cooked ROM and recovery artifacts.
+    Uploads to Gofile.io (unrestricted file size, fast CDN downloads).
+    If Gofile is unreachable, falls back to Filebin.net.
+    """
+    print("\nGenerating download links via Gofile.io...")
+    gf_server = get_gofile_server()
+
     for f in files:
         size_mb = f.stat().st_size / (1024 * 1024)
-        print(f">>> [TEMP.SH] Uploading {f.name} ({size_mb:.2f} MB) to temp.sh...")
+        print(f">>> [GOFILE] Uploading {f.name} ({size_mb:.2f} MB) to Gofile ({gf_server})...")
         link = None
 
-        # Attempt upload up to 2 times
+        # 1. Primary: Gofile.io upload (up to 2 attempts)
         for attempt in range(1, 3):
             try:
                 res = subprocess.run(
-                    ["curl", "-s", "-w", "\n%{http_code}", "-F", f"file=@{f}", "https://temp.sh/upload"],
+                    [
+                        "curl", "-s",
+                        "-F", f"file=@{f}",
+                        f"https://{gf_server}.gofile.io/contents/uploadfile"
+                    ],
                     capture_output=True,
                     text=True,
-                    timeout=900,
+                    timeout=1200,
                 )
-                parts = res.stdout.strip().split("\n")
-                body = parts[0].strip() if parts else ""
-                status = parts[-1].strip() if len(parts) > 1 else ""
-                if status == "200" and body.startswith("http") and "<html" not in body.lower():
-                    link = body
-                    print(f"Direct link ({f.name}) [temp.sh]: {link}")
-                    break
+                resp = json.loads(res.stdout)
+                if resp.get("status") == "ok":
+                    link = resp.get("data", {}).get("downloadPage")
+                    if link:
+                        print(f"Download link ({f.name}) [Gofile]: {link}")
+                        break
             except Exception as e:
                 if attempt == 2:
-                    print(f">>> [WARN] temp.sh upload exception for {f.name}: {e}")
+                    print(f">>> [WARN] Gofile upload exception for {f.name}: {e}")
+
+        # 2. Secondary: Filebin.net fallback if Gofile fails
+        if not link:
+            print(f">>> [WARN] Gofile upload failed for {f.name}. Attempting Filebin fallback...")
+            try:
+                bin_id = f"realme-atoll-{int(time.time())}"
+                fb_res = subprocess.run(
+                    [
+                        "curl", "-s",
+                        "-X", "POST",
+                        "--data-binary", f"@{f}",
+                        "-H", f"filename: {f.name}",
+                        f"https://filebin.net/{bin_id}/{f.name}"
+                    ],
+                    capture_output=True,
+                    text=True,
+                    timeout=1200,
+                )
+                fb_data = json.loads(fb_res.stdout)
+                if "file" in fb_data:
+                    link = f"https://filebin.net/{bin_id}/{f.name}"
+                    print(f"Download link ({f.name}) [Filebin]: {link}")
+            except Exception as e:
+                print(f">>> [WARN] Filebin fallback exception for {f.name}: {e}")
 
         if not link:
-            print(f">>> [WARN] Direct download link generation failed for {f.name} (temp.sh upload failed).")
+            print(f">>> [WARN] Direct download link generation failed for {f.name}.")
 
 
 def main():
@@ -336,8 +390,8 @@ def main():
     key_file = get_sf_key()
     sf_success = upload_sf(files, remote_subdir, key_file)
     if not sf_success:
-        print("\n>>> SourceForge upload skipped or failed. Falling back to temp.sh...")
-        upload_temp(files)
+        print("\n>>> SourceForge upload skipped or failed. Falling back to Gofile.io...")
+        upload_fallback(files)
 
     print("\nUpload complete.")
 
