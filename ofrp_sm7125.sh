@@ -5,11 +5,11 @@
 #
 # Examples:
 #   Standard Build:
-#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
+#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/ofrp_sm7125.sh | bash"
 #   With SourceForge Upload (Devspace Key):
-#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
+#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/ofrp_sm7125.sh | bash"
 #   With SourceForge Upload (Base64 SF_KEY):
-#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
+#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/ofrp_sm7125.sh | bash"
 # =============================================================================
 
 set -e
@@ -33,7 +33,7 @@ WORK_DIR="/tmp/src/android"
 UPLOAD_SUBDIR="Recovery/${DEVICE}/OrangeFox"
 
 SCRIPT_BRANCH="${SCRIPT_BRANCH:-aosp-16}"
-UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/realme-atoll/crave_script/${SCRIPT_BRANCH}/upload.py"
+UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/upload.py"
 
 # =============================================================================
 # SCRIPT LOGIC

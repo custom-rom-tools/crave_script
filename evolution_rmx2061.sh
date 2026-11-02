@@ -4,11 +4,11 @@
 #
 # Examples:
 #   Standard Build:
-#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2061.sh | bash"
+#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2061.sh | bash"
 #   With SourceForge Upload (Devspace Key):
-#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2061.sh | bash"
+#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2061.sh | bash"
 #   With SourceForge Upload (Base64 SF_KEY):
-#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2061.sh | bash"
+#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2061.sh | bash"
 # =============================================================================
 
 set -e
@@ -36,9 +36,9 @@ UPLOAD_SUBDIR="${DEVICE}/EvolutionX/16"
 
 # Helper Scripts URLs
 SCRIPT_BRANCH="${SCRIPT_BRANCH:-aosp-16}"
-CLEAN_SCRIPT_URL="https://raw.githubusercontent.com/realme-atoll/crave_script/${SCRIPT_BRANCH}/clean.py"
-PATCH_SCRIPT_URL="https://raw.githubusercontent.com/realme-atoll/crave_script/${SCRIPT_BRANCH}/patch.py"
-UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/realme-atoll/crave_script/${SCRIPT_BRANCH}/upload.py"
+CLEAN_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/clean.py"
+PATCH_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/patch.py"
+UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/upload.py"
 
 # =============================================================================
 # SCRIPT LOGIC - DO NOT MODIFY BELOW THIS LINE

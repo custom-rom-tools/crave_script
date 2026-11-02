@@ -5,11 +5,11 @@
 #
 # Examples:
 #   Standard Build:
-#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/recovery_all.sh | bash"
+#     crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/recovery_all.sh | bash"
 #   With SourceForge Upload (Devspace Key):
-#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/recovery_all.sh | bash"
+#     crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/recovery_all.sh | bash"
 #   With SourceForge Upload (Base64 SF_KEY):
-#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/recovery_all.sh | bash"
+#     crave run --no-patch -- "export SF_KEY='<b64_key>'; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/recovery_all.sh | bash"
 # =============================================================================
 
 # Note: set -e is deliberately omitted so a failure on one recovery does not abort the other
@@ -41,7 +41,7 @@ UPLOAD_SUBDIR_BASE="Recovery/${DEVICE}"
 
 # Helper Scripts URLs
 SCRIPT_BRANCH="${SCRIPT_BRANCH:-aosp-16}"
-UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/realme-atoll/crave_script/${SCRIPT_BRANCH}/upload.py"
+UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/upload.py"
 
 # =============================================================================
 # SCRIPT LOGIC
