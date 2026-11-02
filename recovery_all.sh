@@ -25,7 +25,7 @@ LUNCH_TARGET="twrp_${DEVICE}-${BUILD_VARIANT}"
 
 # Base Manifests
 OFRP_BASE_MANIFEST_URL="https://gitlab.com/OrangeFox/Manifest.git"
-OFRP_BASE_MANIFEST_BRANCH="fox_12.1"
+OFRP_BASE_MANIFEST_BRANCH="fox_16.0"
 
 TWRP_BASE_MANIFEST_URL="https://github.com/minimal-manifest-twrp/platform_manifest_twrp_aosp.git"
 TWRP_BASE_MANIFEST_BRANCH="twrp-12.1"
@@ -88,7 +88,7 @@ build_orangefox() {
 
     # Clean intermediate files to conserve disk space
     rm -rf out/target/product/* out/soong
-    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}"
+    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}" .repo/projects/device/realme/sm7125.git .repo/projects/device/realme/"${DEVICE}".git
 
     # Substep 1/5: Initialize official OrangeFox manifest
     echo ""
@@ -185,7 +185,7 @@ build_twrp() {
 
     # Clean intermediate files
     rm -rf out/target/product/* out/soong
-    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}"
+    rm -rf .repo/local_manifests device/realme/sm7125 device/realme/"${DEVICE}" .repo/projects/device/realme/sm7125.git .repo/projects/device/realme/"${DEVICE}".git
 
     # Substep 1/5: Initialize TWRP minimal manifest
     echo ""

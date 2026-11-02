@@ -21,7 +21,7 @@ set -e
 DEVICE="${1:-${DEVICE:-sm7125}}"
 RECOVERY_NAME="OrangeFox"
 BASE_MANIFEST_URL="https://gitlab.com/OrangeFox/Manifest.git"
-BASE_MANIFEST_BRANCH="fox_12.1"
+BASE_MANIFEST_BRANCH="fox_16.0"
 DEVICE_MANIFEST_URL="https://github.com/realme-atoll/recovery-manifest"
 DEVICE_MANIFEST_BRANCH="ofrp"
 
