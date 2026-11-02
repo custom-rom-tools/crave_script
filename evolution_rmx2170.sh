@@ -23,12 +23,12 @@ ROM_NAME="Evolution X"
 ROM_MANIFEST_URL="https://github.com/Evolution-X/manifest"
 ROM_MANIFEST_BRANCH="cnb"
 DEVICE_MANIFEST_URL="https://github.com/realme-atoll/RMX2170-manifest"
-DEVICE_MANIFEST_BRANCH="${DEVICE_MANIFEST_BRANCH:-evox-bka}"
+DEVICE_MANIFEST_BRANCH="${DEVICE_MANIFEST_BRANCH:-evox-cnb}"
 
 # Build Settings
 BUILD_VARIANT="${1:-${BUILD_VARIANT:-userdebug}}"
 BUILD_TARGET="evolution"
-LUNCH_TARGET="lineage_${DEVICE}-${BUILD_VARIANT}"
+LUNCH_TARGET="lineage_${DEVICE}-cp2a-${BUILD_VARIANT}"
 WORK_DIR="/tmp/src/android"
 
 # Cloud Upload Destination
@@ -82,7 +82,11 @@ echo " [4/6] Setting up environment & lunching $LUNCH_TARGET..."
 echo "=============================="
 
 source build/envsetup.sh
-lunch "$LUNCH_TARGET"
+if ! lunch "$LUNCH_TARGET" 2>/dev/null; then
+    LUNCH_TARGET="lineage_${DEVICE}-${BUILD_VARIANT}"
+    echo "Fallback to lunch target: $LUNCH_TARGET"
+    lunch "$LUNCH_TARGET"
+fi
 
 # 5. Compile ROM
 echo ""
