@@ -2,7 +2,7 @@
 """
 Clean and reset script for realme-atoll ROM builds.
 Can be executed directly via:
-    curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/aosp-16/clean.py | python3
+    curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/aosp-16/clean.py | python3
 """
 
 def clean():

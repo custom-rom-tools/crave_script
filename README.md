@@ -28,7 +28,7 @@ crave push -d /tmp/src/android/ ~/.ssh/crave_sf
 ```
 Then trigger your build with `export SF_UPLOAD=true`:
 ```bash
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/<script>.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/<script>.sh | bash"
 ```
 During build, the upload script checks `/tmp/crave_sf` directly. The key remains preserved before, during, and after builds.
 
@@ -39,7 +39,7 @@ Encode your private key to Base64:
 
 Then pass `export SF_KEY='...'`:
 ```bash
-crave run --no-patch -- "export SF_KEY='<base64_encoded_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/<script>.sh | bash"
+crave run --no-patch -- "export SF_KEY='<base64_encoded_key>'; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/<script>.sh | bash"
 ```
 
 > **Note:** If neither `SF_UPLOAD=true` nor `SF_KEY` is provided, or if SourceForge upload fails, the script automatically falls back to `Gofile.io` for high-speed download links.
@@ -53,13 +53,13 @@ Sequentially builds Evolution X for Realme 7 Pro (`RMX2170`), Realme 6 Pro (`RMX
 
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_all.sh | bash"
 
 # With SourceForge Upload (Devspace Key):
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_all.sh | bash"
 
 # With SourceForge Upload (Base64 Key):
-crave run --no-patch -- "export SF_KEY='<base64_key>'; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_all.sh | bash"
+crave run --no-patch -- "export SF_KEY='<base64_key>'; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_all.sh | bash"
 ```
 
 ### Build All LineageOS ROMs (`lineage_all.sh`)
@@ -67,10 +67,10 @@ Sequentially builds LineageOS for Realme 7 Pro (`RMX2170`), Realme 6 Pro (`RMX20
 
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lineage_all.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lineage_all.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lineage_all.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lineage_all.sh | bash"
 ```
 
 ### Build All Lunaris ROMs (`lunaris_all.sh`)
@@ -78,10 +78,10 @@ Sequentially builds Lunaris for Realme 7 Pro (`RMX2170`), Realme 6 Pro (`RMX2061
 
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lunaris_all.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lunaris_all.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lunaris_all.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lunaris_all.sh | bash"
 ```
 
 ### Build All Recoveries (`recovery_all.sh`)
@@ -89,10 +89,10 @@ Sequentially builds both OrangeFox and TWRP recoveries for unified `sm7125` dire
 
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/recovery_all.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/recovery_all.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/recovery_all.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/recovery_all.sh | bash"
 ```
 
 ---
@@ -109,37 +109,37 @@ Each ROM has dedicated standalone scripts for each device:
 #### Realme 7 Pro (`RMX2170`)
 ```bash
 # LineageOS:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lineage_rmx2170.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lineage_rmx2170.sh | bash"
 
 # Lunaris:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/lunaris_rmx2170.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/lunaris_rmx2170.sh | bash"
 
 # Evolution X with SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2170.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2170.sh | bash"
 ```
 
 #### Realme 6 Pro (`RMX2061`)
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2061.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2061.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2061.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2061.sh | bash"
 ```
 
 #### Realme 8 Pro (`RMX3081`)
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx3081.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx3081.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx3081.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx3081.sh | bash"
 ```
 
 #### Custom Build Variant (Optional):
 To compile a variant other than the default `userdebug` (e.g. `user` or `eng`), pass `BUILD_VARIANT`:
 ```bash
-crave run --no-patch -- "export BUILD_VARIANT=user; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/evolution_rmx2170.sh | bash"
+crave run --no-patch -- "export BUILD_VARIANT=user; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/evolution_rmx2170.sh | bash"
 ```
 
 ---
@@ -149,19 +149,19 @@ crave run --no-patch -- "export BUILD_VARIANT=user; curl -sLf https://raw.github
 ### OrangeFox Recovery (Unified `sm7125`)
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/ofrp_sm7125.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/ofrp_sm7125.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/ofrp_sm7125.sh | bash"
 ```
 
 ### TeamWin Recovery Project - TWRP (Unified `sm7125`)
 ```bash
 # Standard Build:
-crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/twrp_sm7125.sh | bash"
+crave run --no-patch -- "curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/twrp_sm7125.sh | bash"
 
 # With SourceForge Upload:
-crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/realme-atoll/crave_script/<branch>/twrp_sm7125.sh | bash"
+crave run --no-patch -- "export SF_UPLOAD=true; curl -sLf https://raw.githubusercontent.com/custom-rom-tools/crave_script/<branch>/twrp_sm7125.sh | bash"
 ```
 
 ---
