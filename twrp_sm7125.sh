@@ -32,7 +32,7 @@ WORK_DIR="/tmp/src/android"
 
 UPLOAD_SUBDIR="Recovery/${DEVICE}/TWRP"
 
-SCRIPT_BRANCH="${SCRIPT_BRANCH:-aosp-16}"
+SCRIPT_BRANCH="${SCRIPT_BRANCH:-recovery}"
 UPLOAD_SCRIPT_URL="https://raw.githubusercontent.com/custom-rom-tools/crave_script/${SCRIPT_BRANCH}/upload.py"
 
 # =============================================================================
