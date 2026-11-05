@@ -51,50 +51,81 @@ echo " Building $ROM_NAME for $DEVICE ($BUILD_VARIANT)"
 echo " Working Directory: $(pwd)"
 echo "============================================================"
 
-# 1. Initialize ROM repo
+# 1. Prepare workspace and environment
 echo ""
 echo "=============================="
-echo " [1/6] Initializing $ROM_NAME ($ROM_MANIFEST_BRANCH)..."
+echo " [1/7] Preparing workspace & environment..."
+echo "=============================="
+
+# Ensure ccache is installed in container if missing
+if ! command -v ccache >/dev/null 2>&1; then
+    echo "Installing ccache..."
+    (sudo apt-get update && sudo apt-get install -y ccache) 2>/dev/null || true
+fi
+
+# Clean dead swapfile from previous runs if any to recover 16GB disk space
+if [ -f "/swapfile" ]; then
+    echo "Removing inactive /swapfile to recover container disk space..."
+    sudo swapoff /swapfile 2>/dev/null || true
+    sudo rm -f /swapfile 2>/dev/null || true
+fi
+
+# Clean stale build intermediates
+rm -rf out/soong/.intermediates/system/sepolicy/recovery_sepolicy.* out/soong/.intermediates/system/sepolicy/vendor_sepolicy.* 2>/dev/null || true
+
+# Memory and GC tuning to prevent soong_build OOM kills in container
+export BUILD_BROKEN_MISSING_REQUIRED_MODULES=true
+export DONT_INSTALL_DEXPREOPT_TESTS=true
+export GOGC=40
+export GOMEMLIMIT=14GiB
+export MALLOC_ARENA_MAX=2
+export SOONG_GOGC=40
+export SOONG_INCREMENTAL_ANALYSIS=false
+
+# 2. Initialize ROM repo
+echo ""
+echo "=============================="
+echo " [2/7] Initializing $ROM_NAME ($ROM_MANIFEST_BRANCH)..."
 echo "=============================="
 repo init -u https://github.com/LineageOS/android.git -b lineage-24.0 --git-lfs
 
-# 2. Setup device manifest
+# 3. Setup device manifest
 echo ""
 echo "=============================="
-echo " [2/6] Setting up device manifest..."
+echo " [3/7] Setting up device manifest..."
 echo "=============================="
 rm -rf .repo/local_manifests
 git clone -b "$DEVICE_MANIFEST_BRANCH" "$DEVICE_MANIFEST_URL" .repo/local_manifests
 
-# 3. Clean and sync source
+# 4. Clean and sync source
 echo ""
 echo "=============================="
-echo " [3/6] Syncing source and applying patches..."
+echo " [4/7] Syncing source and applying patches..."
 echo "=============================="
 curl -sLf "$CLEAN_SCRIPT_URL" | python3
 /opt/crave/resync.sh
 curl -sLf "$PATCH_SCRIPT_URL" | python3
 
-# 4. Setup build environment and lunch
+# 5. Setup build environment and lunch
 echo ""
 echo "=============================="
-echo " [4/6] Setting up environment & lunching $LUNCH_TARGET..."
+echo " [5/7] Setting up environment & lunching $LUNCH_TARGET..."
 echo "=============================="
 
 source build/envsetup.sh
 lunch "$LUNCH_TARGET"
 
-# 5. Compile ROM
+# 6. Compile ROM
 echo ""
 echo "=============================="
-echo " [5/6] Building $ROM_NAME ($BUILD_TARGET)..."
+echo " [6/7] Building $ROM_NAME ($BUILD_TARGET)..."
 echo "=============================="
 m "$BUILD_TARGET"
 
-# 6. Upload build artifacts
+# 7. Upload build artifacts
 echo ""
 echo "=============================="
-echo " [6/6] Uploading build artifacts..."
+echo " [7/7] Uploading build artifacts..."
 echo "=============================="
 curl -sLf "$UPLOAD_SCRIPT_URL" | python3 - "${UPLOAD_SUBDIR}" "${DEVICE}" "rom"
 
